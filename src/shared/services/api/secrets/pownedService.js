@@ -1,0 +1,63 @@
+/**
+ * Cipherguard ~ Open source password manager for teams
+ * Copyright (c) 2022 Cipherguard SA (https://cipherguard.github.io)
+ *
+ * Licensed under GNU Affero General Public License version 3 of the or any later version.
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright     Copyright (c) 2022 Cipherguard SA (https://cipherguard.github.io)
+ * @license       https://opensource.org/licenses/AGPL-3.0 AGPL License
+ * @link          https://cipherguard.github.io Cipherguard(tm)
+ * @since         3.9.0
+ */
+
+/**
+ * Call browser extention to check if password is powned
+ */
+class PownedService {
+  /**
+   * Constructor
+   *
+   * @param {port} port for browser extension
+   * @public
+   */
+  constructor(port) {
+    this.port = port;
+  }
+
+  /**
+   * Evaluates a given secret for security.
+   *
+   * @param {string} secret - The secret to evaluate.
+   * @returns {Promise<Object>} An object containing the evaluation results.
+   * @returns {boolean} notInDictionaryHint - Indicates whether the secret is not present in a dictionary.
+   * @returns {boolean} isPwnedServiceAvailable - Indicates whether the pwned password service is available.
+   */
+  async evaluateSecret(secret) {
+    let inDictionary = true;
+    let isPwnedServiceAvailable = true;
+
+    try {
+      inDictionary = await this.checkIfPasswordPowned(secret);
+    } catch (error) {
+      inDictionary = false;
+      isPwnedServiceAvailable = false;
+    }
+
+    return {inDictionary, isPwnedServiceAvailable};
+  }
+
+  /**
+   * Call the browser extension to check if password is part of a dictionary
+   * @param {string} password to check
+   * @return {Promise<boolean>}
+   */
+  async checkIfPasswordPowned(password) {
+    const response =  await this.port.request("cipherguard.secrets.powned-password", password);
+    return response > 0;
+  }
+}
+
+export default PownedService;
+
